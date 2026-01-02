@@ -10,7 +10,7 @@ import {
   Snackbar,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 
@@ -55,48 +55,49 @@ export default function Register() {
     }
 
     try {
-      // ✅ Step 1: Create user in Firebase Auth
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
+  // ✅ Step 1: Create user in Firebase Auth
+  const userCred = await createUserWithEmailAndPassword(auth, email, password);
+  const user = userCred.user;
 
-      // ✅ Step 2: Set display name
-      await updateProfile(user, { displayName: name });
+  // ✅ Step 2: Set display name
+  await updateProfile(user, { displayName: name });
 
-      // ✅ Step 3: Create Firestore user document
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        name,
-        username,
-        email,
-        balance: 0,
-        role: "user",
-        avatar: "",
-        createdAt: serverTimestamp(),
-      });
+  // ✅ Step 3: Send email verification
+  await sendEmailVerification(user);
 
-      // ✅ Step 4: Save to localStorage
-      localStorage.setItem("qfs_logged_in", "true");
-      localStorage.setItem(
-        "qfs_user",
-        JSON.stringify({ uid: user.uid, name, username, email })
-      );
+  // ✅ Step 4: Create Firestore user document
+  await setDoc(doc(db, "users", user.uid), {
+    uid: user.uid,
+    name,
+    username,
+    email,
+    balance: 0,
+    role: "user",
+    avatar: "",
+    emailVerified: false, // 🔐 track verification status
+    createdAt: serverTimestamp(),
+  });
 
-      setSnack({
-        open: true,
-        message: "Registration successful! Logging you in...",
-        severity: "success",
-      });
+  // ❌ Do NOT auto-login unverified users
+  localStorage.removeItem("qfs_logged_in");
+  localStorage.removeItem("qfs_user");
 
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } catch (err) {
-      let message = err.message;
-      if (message.includes("email-already-in-use")) message = "Email already exists.";
-      if (message.includes("permission")) message = "Permission error — please try again later.";
-      setSnack({ open: true, message, severity: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  setSnack({
+  open: true,
+  message:
+    "Account created successfully! A verification email has been sent to your inbox. If you don’t see it within a few minutes, please check your Spam or Junk folder before logging in.",
+  severity: "success",
+});
+
+  // 🔁 Redirect to login instead of dashboard
+  setTimeout(() => navigate("/login"), 2500);
+} catch (err) {
+  let message = err.message;
+  if (message.includes("email-already-in-use")) message = "Email already exists.";
+  if (message.includes("permission")) message = "Permission error — please try again later.";
+  setSnack({ open: true, message, severity: "error" });
+}
+};
 
   return (
     <Box
@@ -252,7 +253,7 @@ export default function Register() {
 
       <Snackbar
         open={snack.open}
-        autoHideDuration={4000}
+        autoHideDuration={null}
         onClose={() => setSnack({ ...snack, open: false })}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >

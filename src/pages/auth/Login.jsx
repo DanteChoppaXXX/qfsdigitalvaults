@@ -48,6 +48,19 @@ export default function Login() {
       // ✅ Firebase authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      // 🔐 Block unverified email users
+        if (!user.emailVerified) {
+          setSnack({
+            open: true,
+            message: "Please verify your email before logging in.",
+            severity: "warning",
+          });
+
+          await auth.signOut(); // immediately log them out
+          setLoading(false);
+          return;
+        }
+
 
       // 🔍 Fetch user data from Firestore
       const userDocRef = doc(db, "users", user.uid);

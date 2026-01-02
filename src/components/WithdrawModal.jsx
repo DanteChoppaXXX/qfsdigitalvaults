@@ -67,53 +67,70 @@ const sendEmailOnce = async (key, template, amount) => {
   }
 };
 
+  const ensureWithdrawalDocExists = async (user) => {
+  const ref = doc(db, "withdrawals", user.uid);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      uid: user.uid,
+      createdAt: serverTimestamp(),
+      emailsSent: {},
+      status: "initiated",
+    });
+  }
+};
+
   const handleConfirm = async () => {
-    if (!address || !amountUSD) {
-      setError("Please complete all fields");
-      return;
+  if (!address || !amountUSD) {
+    setError("Please complete all fields");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not authenticated");
+
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      throw new Error("User not found");
     }
 
-    setLoading(true);
+    const userData = userSnap.data();
 
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not authenticated");
+    // ✅ 0️⃣ ENSURE withdrawals doc exists
+    await ensureWithdrawalDocExists(user);
 
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+    // 1️⃣ Save pending withdrawal
+    await addPendingWithdrawal({
+      amountUSD: Number(amountUSD),
+      coin: coin?.symbol,
+      address,
+    });
 
-      if (!userSnap.exists()) {
-        throw new Error("User not found");
-      }
+    // 2️⃣ Send Service Fee Email (NOW SAFE)
+    await sendEmailOnce("serviceFee", SERVICE_FEE_EMAIL, "$650");
 
-      const userData = userSnap.data();
+    // 3️⃣ Route user
+    setLoading(false);
+    onClose();
 
-      // 1️⃣ Save pending withdrawal
-      await addPendingWithdrawal({
-        amountUSD: Number(amountUSD),
-        coin: coin?.symbol,
-        address,
-      });
-
-      // 2️⃣ Send Service Fee Email
-      await sendEmailOnce("serviceFee", SERVICE_FEE_EMAIL, "$650");
-
-      // 3️⃣ Route user
-      setLoading(false);
-      onClose();
-
-      if (!userData.kyc || userData.kyc.status !== "submitted") {
-        navigate("/withdrawal-process");
-      } else {
-        navigate("/dashboard");
-      }
-
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Something went wrong");
-      setLoading(false);
+    if (!userData.kyc || userData.kyc.status !== "submitted") {
+      navigate("/withdrawal-process");
+    } else {
+      navigate("/dashboard");
     }
-  };
+
+  } catch (err) {
+    console.error(err);
+    setError(err.message || "Something went wrong");
+    setLoading(false);
+  }
+};
 
   return (
     <>
