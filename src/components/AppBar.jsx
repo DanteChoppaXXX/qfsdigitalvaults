@@ -138,6 +138,16 @@ const AppBar = () => {
           >
             Register
           </Link>
+          <Link
+            to="/apply-for-funding"
+            style={styles.navBtnPrimary}
+            onMouseEnter={(e) => (e.target.style.backgroundColor = "#00c7d8")}
+            onMouseLeave={(e) => (e.target.style.backgroundColor = "#00eaff")}
+            onClick={() => setMenuOpen(false)}
+          >
+            Apply For Funding
+          </Link>
+
         </nav>
       </div>
     </header>

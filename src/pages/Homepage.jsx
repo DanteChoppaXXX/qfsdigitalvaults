@@ -17,6 +17,8 @@ const QuantumHome = () => {
           <div className="hero-buttons">
             <Link to="/login" className="btn">Login</Link>
             <Link to="/register" className="btn btn-primary">Join us</Link>
+            <Link to="/apply-for-funding" className="btn btn-primary">Apply For Funding</Link>
+
           </div>
         </div>
       </section>
