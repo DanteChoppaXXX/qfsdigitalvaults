@@ -19,7 +19,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { db, auth } from "../firebase";
+import { db, auth } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 
 /**

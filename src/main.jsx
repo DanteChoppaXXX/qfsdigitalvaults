@@ -18,7 +18,9 @@ import AdminPanel from "./pages/AdminPanel.jsx"
 import Homepage from "./pages/Homepage.jsx"
 import KYCPage from "./pages/KYCPage.jsx"
 import WithdrawalProcess from "./pages/WithdrawalProcess.jsx"
-import WithdrawalApproval from "./pages/WithdrawalApproval.jsx"
+import WithdrawalApproval from "./pages/admin/WithdrawalApproval.jsx"
+import FundingApplication from "./pages/FundingApplication";
+import AdminFundingPanel from "./pages/admin/AdminFundingPanel";
 
 // Routes
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -40,6 +42,7 @@ const router = createBrowserRouter([
           { path: "withdrawal-process", element: <WithdrawalProcess /> },
           { path: "withdrawal-approval", element: <WithdrawalApproval /> },
           { path: "admin", element: <AdminPanel /> },
+          { path: "admin/funding", element: <AdminFundingPanel /> },
         ],
       },
     ],
@@ -52,6 +55,7 @@ const router = createBrowserRouter([
       { index: true, element: <Homepage /> },
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
+      { path: "apply-for-funding", element: <FundingApplication /> },
     ],
   },
 ]);
