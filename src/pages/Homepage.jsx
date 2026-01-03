@@ -135,9 +135,9 @@ const QuantumHome = () => {
         />
         <h5>JOIN THE BIGGEST FINANCIAL REVOLUTIONARY SYSTEM DESIGNED TO OVERTAKE THE WORLD'S BANKING SYSTEM BY ELIMINATING CONTROL OF MONEY BY CABALS.</h5>
         <div className="contact">
-          <p>Email: support@quantumsecuredvaults.com</p>
+          <p>Email: support@qfsdigitalvaults.online</p>
         </div>
-        <p>© 2025 Quantum Secure Vaults. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Quantum Secure Vaults. All rights reserved.</p>
       </div>
     </footer>
     </div>
