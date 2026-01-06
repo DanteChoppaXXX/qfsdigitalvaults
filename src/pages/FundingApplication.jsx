@@ -136,7 +136,7 @@ const FundingApplication = () => {
               gridColumn: "1 / -1",
               width: "100%",
               height: "auto",
-              borderRadius: 2,
+              borderRadius: 1,
               objectFit: "cover",
             }}
           />
@@ -148,7 +148,7 @@ const FundingApplication = () => {
             sx={{
               width: "100%",
               height: 250,
-              borderRadius: 2,
+              borderRadius: 1,
               objectFit: "cover",
             }}
           />
@@ -160,7 +160,7 @@ const FundingApplication = () => {
             sx={{
               width: "100%",
               height: 250,
-              borderRadius: 2,
+              borderRadius: 1,
               objectFit: "cover",
             }}
           />
