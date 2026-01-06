@@ -76,32 +76,106 @@ const FundingApplication = () => {
 };
 
   return (
-    <Box minHeight="100vh" bgcolor="#0b0f14" color="#e6edf3">
-      {/* Header */}
+  <Box
+    minHeight="100vh"
+    sx={{
+      background: "linear-gradient(180deg, #0b0f14 30%, #063a2d 100%)",
+      color: "#e6edf3",
+    }}
+  >
+    {/* Header */}
+    <Box
+      py={1}
+      display="flex"
+      justifyContent="center"
+      borderBottom="1px solid #30363d"
+    >
       <Box
-        py={1}
-        display="flex"
-        justifyContent="center"
-        borderBottom="1px solid #30363d"
-      >
-        <Box
-          component="img"
-          src={Logo}
-          alt="Logo"
-          sx={{
-            height: 70,
-            cursor: "pointer",
-          }}
-          onClick={() => navigate("/")}
-        />
-      </Box>
+        component="img"
+        src={Logo}
+        alt="Logo"
+        sx={{ height: 72, cursor: "pointer" }}
+        onClick={() => navigate("/")}
+      />
+    </Box>
 
-      {/* Form */}
-      <Box maxWidth={520} mx="auto" px={2} py={2}>
-        <Typography variant="h6" fontWeight={600} mb={3}>
-          Apply for Business & Personal Funding
+    {/* Main Content */}
+    <Box
+      maxWidth="1200px"
+      mx="auto"
+      px={1}
+      py={3}
+      display="grid"
+      gridTemplateColumns={{ xs: "1fr", md: "1.1fr 0.9fr" }}
+      gap={5}
+    >
+      {/* LEFT SECTION */}
+      <Box>
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          mb={3}
+          lineHeight={1.2}
+        >
+          Apply For Business & Personal Funding
         </Typography>
 
+        {/* Image Grid */}
+        <Box
+          display="grid"
+          gridTemplateColumns="1fr 1fr"
+          gridTemplateRows="auto auto"
+          gap={1}
+          mb={1}
+        >
+          {/* TOP IMAGE — spans full width */}
+          <Box
+            component="img"
+            src="/happycouples.jpeg"
+            sx={{
+              gridColumn: "1 / -1",
+              width: "100%",
+              height: "auto",
+              borderRadius: 2,
+              objectFit: "cover",
+            }}
+          />
+
+          {/* BOTTOM LEFT */}
+          <Box
+            component="img"
+            src="/mortgage.webp"
+            sx={{
+              width: "100%",
+              height: 250,
+              borderRadius: 2,
+              objectFit: "cover",
+            }}
+          />
+
+          {/* BOTTOM RIGHT */}
+          <Box
+            component="img"
+            src="/cash.jpg"
+            sx={{
+              width: "100%",
+              height: 250,
+              borderRadius: 2,
+              objectFit: "cover",
+            }}
+          />
+        </Box>
+      </Box>
+
+      {/* RIGHT SECTION (FORM PANEL) */}
+      <Box
+        sx={{
+          background: "linear-gradient(180deg, #0b0f14 30%, #063a2d 100%)",
+          border: "0px solid #30363d",
+          borderRadius: 3,
+          p: 1,
+        }}
+      >
         <SimpleInput label="Full Name" value={form.fullName} onChange={handleChange("fullName")} />
         <SimpleInput label="Email Address" value={form.email} onChange={handleChange("email")} />
         <SimpleInput label="Phone Number" value={form.phone} onChange={handleChange("phone")} />
@@ -121,7 +195,7 @@ const FundingApplication = () => {
           required
           value={form.description}
           onChange={handleChange("description")}
-          sx={inputStyles}
+          sx={{ ...inputStyles, mb: 3 }}
         />
 
         <Button
@@ -130,8 +204,7 @@ const FundingApplication = () => {
           disabled={!isFormValid || submitting}
           onClick={handleSubmit}
           sx={{
-            mt: 4,
-            py: 1.4,
+            py: 1.5,
             fontWeight: 600,
             borderRadius: 2,
             backgroundColor: "#00ffcc",
@@ -152,7 +225,8 @@ const FundingApplication = () => {
         </Button>
       </Box>
     </Box>
-  );
+  </Box>
+);
 };
 
 /* ---------- Reusable Input ---------- */
